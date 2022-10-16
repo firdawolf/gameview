@@ -317,7 +317,6 @@ pub fn sent(bitrate: u32, shutdown_rx: Receiver<()>) {
         qtp2audiosink,
         shutdown_rx,
     );
-
     // tokio::runtime::Builder::new_current_thread()
     //     .enable_all()
     //     .build()
