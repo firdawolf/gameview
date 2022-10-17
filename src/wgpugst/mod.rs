@@ -161,8 +161,8 @@ pub fn sent(bitrate: u32, shutdown_rx: Receiver<()>) {
     //     gst::ElementFactory::make("rswgpu", Some("sink")).expect("Could not create sink element");
 
     let size1 = PhysicalSize {
-        height: 864, // 864
-        width: 1536, // 1536
+        height: 972, // 864
+        width: 1728, // 1536
     };
     let framerate: i32 = 75;
     // let size2 = PhysicalSize {
@@ -355,8 +355,8 @@ pub fn receive(connect_to: SocketAddr) {
     //     gst::ElementFactory::make("rswgpu", Some("sink")).expect("Could not create sink element");
 
     let size1 = PhysicalSize {
-        height: 864, // 864
-        width: 1536, // 1536
+        height: 972, // 864
+        width: 1728, // 1536
     };
     let framerate: i32 = 75;
     let size2 = PhysicalSize {

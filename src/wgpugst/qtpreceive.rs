@@ -801,17 +801,17 @@ pub async fn qtpreceive(
                                         current_latency.to_string(),
                                     ));
                                 }
+                                // {
+                                //     let mut rpass = wgpusurfaceclone2.yuv_renderpass(&mut encoder);
+                                //     wgpusurfaceclone2.yuv_draw(&mut rpass);
+                                // }
                                 {
-                                    let mut rpass = wgpusurfaceclone2.yuv_renderpass(&mut encoder);
-                                    wgpusurfaceclone2.yuv_draw(&mut rpass);
+                                    let mut cpass = wgpusurfaceclone2.yuv_computepass(&mut encoder);
+                                    wgpusurfaceclone2.yuv_compute(size1, &mut cpass);
                                 }
-                                // {
-                                //     let mut cpass = wgpusurfaceclone2.yuv_computepass(&mut encoder);
-                                //     wgpusurfaceclone2.yuv_compute(size1, &mut cpass);
-                                // }
-                                // {
-                                //     wgpusurfaceclone2.transfertexture(&mut encoder, size1);
-                                // }
+                                {
+                                    wgpusurfaceclone2.transfertexture(&mut encoder, size1);
+                                }
                                 {
                                     let mut rpass = wgpusurfaceclone2.easu_renderpass(&mut encoder);
                                     wgpusurfaceclone2.easu_draw(&mut rpass);

@@ -1,10 +1,11 @@
 
+
 @group(0) @binding(0)
 var ytexture: texture_2d<f32>;
 @group(0) @binding(1)
 var uvtexture: texture_2d<f32>;
 @group(0) @binding(2)
-var samp: sampler;
+var uvsamp: sampler;
 @group(0) @binding(3) 
 var rgbstorage : texture_storage_2d<rgba8unorm, write>;
 
@@ -12,7 +13,7 @@ var rgbstorage : texture_storage_2d<rgba8unorm, write>;
 // var<workgroup> ytile : array<array<f32, 128>, 4>;
 // var<workgroup> uvtile : array<array<vec2<f32>, 128>, 4>;
 
-@compute @workgroup_size(32)
+@compute @workgroup_size(8,8,1)
 fn main(@builtin(workgroup_id) WorkGroupID : vec3<u32>,
   @builtin(global_invocation_id) global_id: vec3<u32>,
   @builtin(local_invocation_id) LocalInvocationID : vec3<u32>) {
@@ -24,21 +25,20 @@ fn main(@builtin(workgroup_id) WorkGroupID : vec3<u32>,
     
       
       
-      let y:f32 = textureSampleLevel(
+      let y:f32 = textureLoad(
         ytexture,
-        samp,
-        vec2<f32>(baseIndex) / vec2<f32>(ydims), 
-        0.0
+        baseIndex,
+        0
       ).r - 0.0625;
       let u:f32 = textureSampleLevel(
         uvtexture,
-        samp,
+        uvsamp,
         vec2<f32>(baseIndex) / vec2<f32>(ydims), 
         0.0 
       ).r - 0.5;
       let v:f32 = textureSampleLevel(
         uvtexture,
-        samp,
+        uvsamp,
         vec2<f32>(baseIndex) / vec2<f32>(ydims), 
         0.0
       ).g - 0.5;
