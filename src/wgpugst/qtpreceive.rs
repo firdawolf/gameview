@@ -810,12 +810,17 @@ pub async fn qtpreceive(
                                     wgpusurfaceclone2.yuv_compute(size1, &mut cpass);
                                 }
                                 {
-                                    wgpusurfaceclone2.transfertexture(&mut encoder, size1);
+                                    let mut cpass =
+                                        wgpusurfaceclone2.easu_computepass(&mut encoder);
+                                    wgpusurfaceclone2.easu_compute(size2, &mut cpass);
                                 }
-                                {
-                                    let mut rpass = wgpusurfaceclone2.easu_renderpass(&mut encoder);
-                                    wgpusurfaceclone2.easu_draw(&mut rpass);
-                                }
+                                // {
+                                //     wgpusurfaceclone2.transfertexture(&mut encoder, size1);
+                                // }
+                                // {
+                                //     let mut rpass = wgpusurfaceclone2.easu_renderpass(&mut encoder);
+                                //     wgpusurfaceclone2.easu_draw(&mut rpass);
+                                // }
                                 {
                                     let mut rpass = wgpusurfaceclone2.lcas_renderpass(&mut encoder);
                                     wgpusurfaceclone2.lcas_draw(&mut rpass);
