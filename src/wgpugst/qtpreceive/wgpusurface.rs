@@ -69,14 +69,25 @@ struct Resolution {
     inputheight: f32,
     outputwidth: f32,
     outputheight: f32,
+    sharpnessrcas: f32,
+    sharpnesslcas: f32,
 }
 impl Resolution {
-    fn new(inputwidth: f32, inputheight: f32, outputwidth: f32, outputheight: f32) -> Resolution {
+    fn new(
+        inputwidth: f32,
+        inputheight: f32,
+        outputwidth: f32,
+        outputheight: f32,
+        sharpnessrcas: f32,
+        sharpnesslcas: f32,
+    ) -> Resolution {
         Resolution {
             inputwidth: inputwidth,
             inputheight: inputheight,
             outputwidth: outputwidth,
             outputheight: outputheight,
+            sharpnessrcas: sharpnessrcas,
+            sharpnesslcas: sharpnesslcas,
         }
     }
 }
@@ -134,8 +145,17 @@ impl Wgpusurface {
         swapchain_format: wgpu::TextureFormat,
         size1: PhysicalSize<u32>,
         size2: PhysicalSize<u32>,
+        sharpnessrcas: f32,
+        sharpnesslcas: f32,
     ) -> Wgpusurface {
-        build_pipeline(device, swapchain_format, size1, size2)
+        build_pipeline(
+            device,
+            swapchain_format,
+            size1,
+            size2,
+            sharpnessrcas,
+            sharpnesslcas,
+        )
     }
     pub fn yuv_renderpass<'a>(
         &'a self,
@@ -329,6 +349,8 @@ fn build_pipeline(
     swapchain_format: wgpu::TextureFormat,
     size1: PhysicalSize<u32>,
     size2: PhysicalSize<u32>,
+    sharpnessrcas: f32,
+    sharpnesslcas: f32,
 ) -> Wgpusurface {
     let mut camera = Camera {
         // position the camera one unit up and 2 units back
@@ -456,9 +478,7 @@ fn build_pipeline(
         format: wgpu::TextureFormat::Rgba8Unorm,
         // TEXTURE_BINDING tells wgpu that we want to use this texture in shaders
         // COPY_DST means that we want to copy data to this texture
-        usage: wgpu::TextureUsages::TEXTURE_BINDING
-            | wgpu::TextureUsages::RENDER_ATTACHMENT
-            | wgpu::TextureUsages::COPY_DST,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::STORAGE_BINDING,
         label: Some("diffuse_texture"),
     });
     let lcas_texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -557,6 +577,8 @@ fn build_pipeline(
         size1.height as f32,
         size2.width as f32,
         size2.height as f32,
+        sharpnessrcas,
+        sharpnesslcas,
     );
 
     let resolution_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -821,7 +843,7 @@ fn build_pipeline(
             },
             wgpu::BindGroupEntry {
                 binding: 3,
-                resource: wgpu::BindingResource::TextureView(&rgba_texture_view),
+                resource: wgpu::BindingResource::TextureView(&easu_texture_view),
             },
         ],
         label: Some("yuv_bind_group2"),

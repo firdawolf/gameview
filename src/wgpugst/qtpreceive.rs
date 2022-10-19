@@ -104,6 +104,7 @@ fn print_pad_capabilities(element: &gst::Element, pad_name: &str) {
 #[tokio::main]
 pub async fn qtpreceive(
     framerate: i32,
+    downscale: u32,
     size1: PhysicalSize<u32>,
     size2: PhysicalSize<u32>,
     wgpusink: gstreamer_app::AppSink,
@@ -177,7 +178,7 @@ pub async fn qtpreceive(
     // Initialize scene and GUI controls
 
     let mut controls = Controls::new();
-    let wgpusurface = Wgpusurface::new(&device, swapchain_format, size1, size2);
+    let wgpusurface = Wgpusurface::new(&device, swapchain_format, size1, size2, 0.25, 0.05);
     let mut debug = Debug::new();
     let mut renderer = Renderer::new(Backend::new(&device, Settings::default(), swapchain_format));
     let mut state = iced_native::program::State::new(
@@ -200,57 +201,7 @@ pub async fn qtpreceive(
             .build(),
     ));
 
-    let public_ip = public_ip::addr_v4()
-        .await
-        .expect("cannot get public ip address");
-    let node = Endpoint::new_client(
-        SocketAddr::from((Ipv4Addr::new(0, 0, 0, 0), 0)),
-        Config {
-            forward_port: false,
-
-            external_ip: Some(IpAddr::V4(public_ip)),
-
-            idle_timeout: Duration::from_secs(60 * 60).into(), // 1 hour idle timeout.
-            ..Default::default()
-        },
-    )
-    .expect("Cannot create endpoint");
-    let node2 = Endpoint::new_client(
-        SocketAddr::from((Ipv4Addr::new(0, 0, 0, 0), 0)),
-        Config {
-            forward_port: false,
-
-            external_ip: Some(IpAddr::V4(public_ip)),
-
-            idle_timeout: Duration::from_secs(60 * 60).into(), // 1 hour idle timeout.
-            ..Default::default()
-        },
-    )
-    .expect("Cannot create endpoint");
-    let node3 = Endpoint::new_client(
-        SocketAddr::from((Ipv4Addr::new(0, 0, 0, 0), 0)),
-        Config {
-            forward_port: false,
-
-            external_ip: Some(IpAddr::V4(public_ip)),
-
-            idle_timeout: Duration::from_secs(60 * 60).into(), // 1 hour idle timeout.
-            ..Default::default()
-        },
-    )
-    .expect("Cannot create endpoint");
-    let node4 = Endpoint::new_client(
-        SocketAddr::from((Ipv4Addr::new(0, 0, 0, 0), 0)),
-        Config {
-            forward_port: false,
-
-            external_ip: Some(IpAddr::V4(public_ip)),
-
-            idle_timeout: Duration::from_secs(60 * 60).into(), // 1 hour idle timeout.
-            ..Default::default()
-        },
-    )
-    .expect("Cannot create endpoint");
+    
     // println!("check for reachable ...");
     // node.is_reachable(&SocketAddr::from((Ipv4Addr::new(60, 52, 227, 195), 56683)))
     //     .await
@@ -279,53 +230,7 @@ pub async fn qtpreceive(
             .build(),
     ));
 
-    let peer: SocketAddr = connect_to;
-    println!("Trying to connect to {} :", peer);
-    let (authconn, mut authincoming) = node4
-        .connect_to(&peer)
-        .await
-        .expect("cannot create connection");
-    let mut builder = Builder::default();
-    let mut send_input = builder.start_map();
-    send_input.push("key", "hello");
-    send_input.push("password", "123");
-    send_input.end_map();
-    // println!(
-    //     "Mouse state :{} x :{} y :{}",
-    //     *mouse_state_temp, cursor_position_temp.x, cursor_position_temp.y
-    // );
-    authconn
-        .send(Bytes::copy_from_slice(builder.view()))
-        .await
-        .expect("get error sent input");
-    let incominginfo = authincoming.next().await.unwrap();
-    let data = incominginfo.expect("cannot get byte");
-    let root = Reader::get_root(data.as_byte_slice()).unwrap();
-    let read_input = root.as_map();
-    let status = read_input.idx("status").as_u32();
-    match status {
-        0 => {
-            let height = read_input.idx("height").as_u32();
-            let width = read_input.idx("width").as_u32();
-            let portvideo = read_input.idx("portvideo").as_u32();
-            let portaudio = read_input.idx("portaudio").as_u32();
-            let portinput = read_input.idx("portinput").as_u32();
-
-            // size1.height = height as u32;
-            // size1.width = width as u32;
-
-            let (connection, mut incoming_messages) = node
-                .connect_to(&SocketAddr::new(peer.ip().clone(), portvideo as u16))
-                .await
-                .expect("cannot create connection");
-            let (_connection2, mut incoming_messages2) = node2
-                .connect_to(&SocketAddr::new(peer.ip().clone(), portaudio as u16))
-                .await
-                .expect("cannot create connection");
-            let (sent_stream_input, _incoming_messages3) = node3
-                .connect_to(&SocketAddr::new(peer.ip().clone(), portinput as u16))
-                .await
-                .expect("cannot create connection");
+    
 
             //let _src = connection.remote_address();
 
@@ -809,9 +714,9 @@ pub async fn qtpreceive(
                                     let mut cpass = wgpusurfaceclone2.yuv_computepass(&mut encoder);
                                     wgpusurfaceclone2.yuv_compute(size1, &mut cpass);
                                 }
-                                {
-                                    wgpusurfaceclone2.transfertexture(&mut encoder, size1);
-                                }
+                                // {
+                                //     wgpusurfaceclone2.transfertexture(&mut encoder, size1);
+                                // }
                                 {
                                     let mut rpass = wgpusurfaceclone2.easu_renderpass(&mut encoder);
                                     wgpusurfaceclone2.easu_draw(&mut rpass);
@@ -868,12 +773,8 @@ pub async fn qtpreceive(
                     _ => {}
                 }
             });
-        }
-        1 => {
-            println!("Username or Passwords is not correct")
-        }
-        _ => {}
-    }
+        
+       
 
     // node.close();
 }

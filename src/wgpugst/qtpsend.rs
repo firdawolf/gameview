@@ -153,7 +153,7 @@ pub async fn qtpsend(
     framerate: i32,
     pipeline2: gst::Pipeline,
     appsinkaudio: gstreamer_app::AppSink,
-    shutdown_rx: Receiver<()>,
+    downscale: u32,
 ) {
     let public_ip = public_ip::addr_v4()
         .await
@@ -383,6 +383,8 @@ pub async fn qtpsend(
                             send_input.push("status", 0 as u32);
                             send_input.push("height", size1.height as u32);
                             send_input.push("width", size1.width as u32);
+                            send_input.push("framerate", framerate as u32);
+                            send_input.push("downscale", downscale as u32);
                             send_input.push("portvideo", node.public_addr().port() as u32);
                             send_input.push("portaudio", node2.public_addr().port() as u32);
                             send_input.push("portinput", node3.public_addr().port() as u32);

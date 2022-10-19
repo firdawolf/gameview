@@ -13,6 +13,8 @@ struct Resolution{
    inputheight:f32,
    outputwidth:f32,
    outputheight:f32,
+   sharpnessrcas:f32,
+   sharpnesslcas:f32,
 }
 
 

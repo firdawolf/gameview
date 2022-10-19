@@ -6,6 +6,8 @@ struct Resolution{
    inputheight:f32,
    outputwidth:f32,
    outputheight:f32,
+   sharpnessrcas:f32,
+   sharpnesslcas:f32,
 }
 
 @group(0)@binding(0)
@@ -44,7 +46,7 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32>{
-	let peak : f32 = lerp(0.0, -0.1111111111111111, sharpness);
+	let peak : f32 = lerp(0.0, -0.1111111111111111, resolution.sharpnesslcas);
 	// let pos : vec2<f32>  = (ip + 0.5) * in.tex_coords;
     // var inputSize : vec2<f32>;
     let inputWidthRcas : f32 = resolution.outputwidth;
