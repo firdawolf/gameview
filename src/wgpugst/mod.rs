@@ -1,3 +1,4 @@
+use byte_slice_cast::AsByteSlice;
 use bytes::Bytes;
 use clap::Arg;
 use haphazard::{AtomicPtr, HazardPointer};
@@ -59,14 +60,46 @@ use winit::{
 // mod menu;
 // use menu::menu_ui::{Gameview, Message};
 extern crate gstreamer_app;
-#[path = "../main.rs"]
-mod arg;
-use arg::Argscustom;
+use clap::Parser;
 use std::i32;
 
 use gst::Structure;
 
 //all public function
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+pub struct Argscustom {
+    /// Sent or Receive
+    #[arg(short, long)]
+    pub sent_or_receive: String,
+    /// (SENT) the monitor index
+    #[arg(short, long, default_value_t = 0)]
+    pub monitor: i32,
+    /// (SENT) show cursor or not
+    #[arg(short, long, default_value_t = false)]
+    pub show_cursor: bool,
+    /// (SENT) Encode with bframes
+    #[arg(short, long, default_value_t = 0)]
+    pub bframes: u32,
+    /// (SENT) Encode with bframes
+    #[arg(short, long, default_value_t = 5000)]
+    pub bitrate: u32,
+    /// (SENT) Higher number =Better quality, Lower number =Faster speed Value from : 100 - 10
+    #[arg(short, long, default_value_t = 50)]
+    pub quality_vs_speed: u32,
+    /// (SENT) Mode : cbr for constant bitrate or vbr for variable bitrate
+    #[arg(short, long, default_value_t = String::from("cbr"))]
+    pub rc_mode: String,
+    /// (SENT) true for low-latency with trade off quality
+    #[arg(short, long, default_value_t = false)]
+    pub low_latency: bool,
+    /// (SENT) Downscale percent for use with fsr 0 - 40
+    #[arg(short, long, default_value_t = 0)]
+    pub downscale: i32,
+    /// (RECEIVE) IP to connect to
+    #[arg(short, long, default_value_t = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 56687))]
+    pub ip_connect: SocketAddr,
+}
 
 pub fn device() -> String {
     // gst::init().unwrap();
@@ -129,19 +162,19 @@ pub fn sent(args: Argscustom) {
     event_loop.available_monitors().for_each(|handle| {
         monitors.push(handle);
     });
-    let monitorinfo = monitors[args.monitor] as MonitorHandle;
-    let framerate: i32 = 60;
+    let monitorinfo = &monitors[args.monitor as usize];
+    let mut framerate: i32 = 60;
     monitorinfo.video_modes().for_each(|mode| {
         println!("Refresh rate :{}", mode.refresh_rate());
         framerate = mode.refresh_rate() as i32
     });
-    let size1 = PhysicalSize {
-        height: monitorinfo.size().y, // 864
-        width: monitorinfo.size().x,  // 1536
+    let mut size1 = PhysicalSize {
+        height: monitorinfo.size().height, // 864
+        width: monitorinfo.size().width,   // 1536
     };
     if args.downscale != 0 {
-        size1.width = (size1.width * (100 - args.downscale)) / 100;
-        size1.height = (size1.height * (100 - args.downscale)) / 100;
+        size1.width = ((size1.width as i32 * (100 - args.downscale)) / 100) as u32;
+        size1.height = ((size1.height as i32 * (100 - args.downscale)) / 100) as u32;
     }
 
     // let audiosource = gst::ElementFactory::make("wasapi2src", Some("audiosource"))
@@ -340,8 +373,8 @@ pub fn sent(args: Argscustom) {
     //         qtpsend(source, qtp2sink, pipeline, size1).await;
     //     });
 }
-
-pub fn receive(args: Argscustom) {
+#[tokio::main]
+pub async fn receive(args: Argscustom) {
     // Initialize GStreamer
     gst::init().unwrap();
 
@@ -438,7 +471,8 @@ pub fn receive(args: Argscustom) {
         },
     )
     .expect("Cannot create endpoint");
-    let peer: SocketAddr = connect_to;
+
+    let peer: SocketAddr = args.ip_connect;
     println!("Trying to connect to {} :", peer);
     let (authconn, mut authincoming) = node4
         .connect_to(&peer)
@@ -471,22 +505,45 @@ pub fn receive(args: Argscustom) {
             let portvideo = read_input.idx("portvideo").as_u32();
             let portaudio = read_input.idx("portaudio").as_u32();
             let portinput = read_input.idx("portinput").as_u32();
-
+            let event_loop = EventLoop::new();
+            let mut monitors: Vec<MonitorHandle> = vec![];
+            event_loop.available_monitors().for_each(|handle| {
+                println!("Monitor of : {}", &handle.name().unwrap());
+                monitors.push(handle);
+            });
+            // let window = winit::window::Window::new(&event_loop).unwrap();
+            let monitorinfo = &monitors[0 as usize];
             let size1 = PhysicalSize {
                 height: height, // 864
                 width: width,   // 1536
             };
             let framerate: i32 = framerateget as i32;
-            let size2 = PhysicalSize {
-                height: 1080,
-                width: 1920,
-            };
 
-            let (connection, mut incoming_messages) = node
+            let mut size2 = PhysicalSize {
+                height: monitorinfo.size().height,
+                width: monitorinfo.size().width,
+            };
+            if downscale != 0 {
+                size2.width = ((size1.width as i32 * 100) / (100 - args.downscale)) as u32;
+                size2.height = ((size1.height as i32 * 100) / (100 - args.downscale)) as u32;
+            } else {
+                size2.width = size1.width;
+                size2.height = size1.height;
+            }
+            let window = winit::window::WindowBuilder::new()
+                .with_inner_size(size2)
+                // .with_fullscreen(Some(Fullscreen::Borderless(Some(
+                //     monitors.get(0).unwrap().clone(),
+                // ))))
+                .with_title(String::from("Gameview"))
+                .build(&event_loop)
+                .unwrap();
+
+            let (_connection, incoming_messages) = node
                 .connect_to(&SocketAddr::new(peer.ip().clone(), portvideo as u16))
                 .await
                 .expect("cannot create connection");
-            let (_connection2, mut incoming_messages2) = node2
+            let (_connection2, incoming_messages2) = node2
                 .connect_to(&SocketAddr::new(peer.ip().clone(), portaudio as u16))
                 .await
                 .expect("cannot create connection");
@@ -537,22 +594,7 @@ pub fn receive(args: Argscustom) {
             let wgpusink = sink
                 .dynamic_cast::<gstreamer_app::AppSink>()
                 .expect("Sink element is expected to be an appsink!");
-            let event_loop = EventLoop::new();
-            let mut monitors: Vec<MonitorHandle> = vec![];
-            event_loop.available_monitors().for_each(|handle| {
-                println!("Monitor of : {}", &handle.name().unwrap());
-                monitors.push(handle);
-            });
-            // let window = winit::window::Window::new(&event_loop).unwrap();
 
-            let window = winit::window::WindowBuilder::new()
-                .with_inner_size(size2)
-                // .with_fullscreen(Some(Fullscreen::Borderless(Some(
-                //     monitors.get(0).unwrap().clone(),
-                // ))))
-                .with_title(String::from("Wgpu Render"))
-                .build(&event_loop)
-                .unwrap();
             qtpreceive::qtpreceive(
                 framerate,
                 downscale,
@@ -565,8 +607,11 @@ pub fn receive(args: Argscustom) {
                 pipeline,
                 pipeline_audio,
                 appsrc2,
-                connect_to,
-            );
+                incoming_messages,
+                incoming_messages2,
+                sent_stream_input,
+            )
+            .await;
         }
         1 => {
             println!("Username or Passwords is not correct")

@@ -160,11 +160,12 @@ impl Wgpusurface {
     pub fn yuv_renderpass<'a>(
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,
+        surface_view: &'a wgpu::TextureView,
     ) -> wgpu::RenderPass<'a> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &self.easu_texture_view,
+                view: &surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),

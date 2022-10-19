@@ -65,7 +65,7 @@ fn press_key_keyboard(keyscan: u16, keyboard_state: u32) {
         SendInput(1, &mut input, ipsize);
     };
 }
-fn press_key_mouse(flags: u32, positionx: i32, positiony: i32, mouseData: u32) {
+fn press_key_mouse(flags: u32, positionx: i32, positiony: i32, mouse_data: i8) {
     let mut input_u: INPUT_u = unsafe { std::mem::zeroed() };
 
     match flags {
@@ -80,7 +80,7 @@ fn press_key_mouse(flags: u32, positionx: i32, positiony: i32, mouseData: u32) {
                 dwExtraInfo: 0,
                 time: 0,
                 dwFlags: flags,
-                mouseData: mouseData,
+                mouseData: (mouse_data * 120) as u32,
             };
             let mut input = INPUT {
                 type_: INPUT_MOUSE,
@@ -97,7 +97,7 @@ fn press_key_mouse(flags: u32, positionx: i32, positiony: i32, mouseData: u32) {
                 dwExtraInfo: 0,
                 time: 0,
                 dwFlags: flags,
-                mouseData: mouseData,
+                mouseData: mouse_data as u32,
             };
             let mut input = INPUT {
                 type_: INPUT_MOUSE,
@@ -437,7 +437,7 @@ pub async fn qtpsend(
                                                 let mouse_state =
                                                     read_input.idx("mouse_state").as_u32();
                                                 let mouse_data =
-                                                    read_input.idx("mouse_data").as_u32();
+                                                    read_input.idx("mouse_data").as_i8();
                                                 let position_x =
                                                     read_input.idx("position_x").as_i32();
                                                 let position_y =
