@@ -44,7 +44,7 @@ bitflags = "1.3.2"
 rayon = "1.5.1"
 qp2p = {version = "0.28.7", features = ["igd"] }
 bytes = { version = "1.2.1", features = ["serde"] }
-tokio = { version = "1.20.1", features = ["macros","rt","rt-multi-thread"] }
+tokio = { version = "1.20.1", features = ["macros","rt-multi-thread"] }
 public-ip = "0.2.2"
 concurrent-queue = "1.2.4"
 haphazard = "0.1.4"

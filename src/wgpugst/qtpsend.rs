@@ -154,6 +154,8 @@ pub async fn qtpsend(
     pipeline2: gst::Pipeline,
     appsinkaudio: gstreamer_app::AppSink,
     downscale: u32,
+    key: String,
+    password: String,
 ) {
     let public_ip = public_ip::addr_v4()
         .await
@@ -333,7 +335,7 @@ pub async fn qtpsend(
                         //     Ok(_) => {}
                         //     Err(_) => {}
                         // }
-                        let bytes = Bytes::copy_from_slice(readable.as_byte_slice());
+                        let bytes = &Bytes::copy_from_slice(readable.as_byte_slice());
                         let mut h1 = HazardPointer::new();
                         let my_x = currentusage_clone2.safe_load(&mut h1).expect("not null");
 
@@ -361,8 +363,8 @@ pub async fn qtpsend(
     println!("In Running state ...");
     let globalIp = node4.public_addr().to_string();
     //later pass arg on this
-    let realkey = "hello";
-    let realpassword = "123";
+    let realkey = key.as_str();
+    let realpassword = password.as_str();
     let mut firsttime = true;
     // let connection_arc = Arc::new(incoming_conns);
     // let connection_arc2 = Arc::new(incoming_conns2);
@@ -407,6 +409,7 @@ pub async fn qtpsend(
                             // let connection_clone = Arc::clone(&connection_arc);
                             // let connection_clone2 = Arc::clone(&connection_arc2);
                             // let connection_clone3 = Arc::clone(&connection_arc3);
+
                             let (conn, _incoming_messages) =
                                 incoming_conns.next().await.expect("cannot get connection");
                             let (conn2, _incoming_messages2) =
@@ -469,6 +472,7 @@ pub async fn qtpsend(
                                     }
                                 }
                             });
+
                             if firsttime {
                                 pipeline
                                     .set_state(gst::State::Playing)

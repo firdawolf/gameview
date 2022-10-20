@@ -90,6 +90,12 @@ pub struct Argscustom {
     /// (SENT) Mode : cbr for constant bitrate or vbr for variable bitrate
     #[arg(short, long, default_value_t = String::from("cbr"))]
     pub rc_mode: String,
+    /// (SENT) (RECEIVE) The key to use during receive
+    #[arg(short, long)]
+    pub key: String,
+    /// (SENT) (RECEIVE) The password to access during the receive
+    #[arg(short, long)]
+    pub password: String,
     /// (SENT) true for low-latency with trade off quality
     #[arg(short, long, default_value_t = false)]
     pub low_latency: bool,
@@ -363,6 +369,8 @@ pub fn sent(args: Argscustom) {
         pipeline_audio,
         qtp2audiosink,
         args.downscale as u32,
+        args.key,
+        args.password,
     );
 
     // tokio::runtime::Builder::new_current_thread()
@@ -481,8 +489,8 @@ pub async fn receive(args: Argscustom) {
         .expect("cannot create connection");
     let mut builder = Builder::default();
     let mut send_input = builder.start_map();
-    send_input.push("key", "hello");
-    send_input.push("password", "123");
+    send_input.push("key", args.key.as_str());
+    send_input.push("password", args.password.as_str());
     send_input.end_map();
     // println!(
     //     "Mouse state :{} x :{} y :{}",
