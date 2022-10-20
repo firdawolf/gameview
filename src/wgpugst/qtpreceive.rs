@@ -691,7 +691,7 @@ pub async fn qtpreceive(
                             state.queue_message(Message::TextChanged(current_latency.to_string()));
                         }
 
-                        if downscale != 0 {
+                        if downscale > 0 {
                             {
                                 let mut cpass = wgpusurfaceclone2.yuv_computepass(&mut encoder);
                                 wgpusurfaceclone2.yuv_compute(size1, &mut cpass);

@@ -166,7 +166,7 @@ pub async fn qtpsend(
 
             external_ip: Some(IpAddr::V4(public_ip)),
             external_port: Some(56684 as u16),
-            idle_timeout: Duration::from_secs(5).into(), // 1 hour idle timeout.
+            idle_timeout: Duration::from_secs(60).into(), // 1 hour idle timeout.
             ..Default::default()
         },
     )
@@ -181,7 +181,7 @@ pub async fn qtpsend(
 
             external_ip: Some(IpAddr::V4(public_ip)),
             external_port: Some(56685 as u16),
-            idle_timeout: Duration::from_secs(5).into(), // 1 hour idle timeout.
+            idle_timeout: Duration::from_secs(60).into(), // 1 hour idle timeout.
             ..Default::default()
         },
     )
@@ -210,7 +210,7 @@ pub async fn qtpsend(
 
             external_ip: Some(IpAddr::V4(public_ip)),
             external_port: Some(56687 as u16),
-            idle_timeout: Duration::from_secs(5).into(), // 1 hour idle timeout.
+            idle_timeout: Duration::from_secs(60 * 60).into(), // 1 hour idle timeout.
             ..Default::default()
         },
     )
@@ -389,6 +389,10 @@ pub async fn qtpsend(
                             send_input.push("portaudio", node2.public_addr().port() as u32);
                             send_input.push("portinput", node3.public_addr().port() as u32);
                             send_input.end_map();
+                            println!(
+                                "get width {} and height {} downscale {}",
+                                size1.width, size1.height, downscale
+                            );
                             // println!(
                             //     "Mouse state :{} x :{} y :{}",
                             //     *mouse_state_temp, cursor_position_temp.x, cursor_position_temp.y

@@ -172,7 +172,7 @@ pub fn sent(args: Argscustom) {
         height: monitorinfo.size().height, // 864
         width: monitorinfo.size().width,   // 1536
     };
-    if args.downscale != 0 {
+    if args.downscale > 0 {
         size1.width = ((size1.width as i32 * (100 - args.downscale)) / 100) as u32;
         size1.height = ((size1.height as i32 * (100 - args.downscale)) / 100) as u32;
     }
@@ -373,6 +373,7 @@ pub fn sent(args: Argscustom) {
     //         qtpsend(source, qtp2sink, pipeline, size1).await;
     //     });
 }
+
 #[tokio::main]
 pub async fn receive(args: Argscustom) {
     // Initialize GStreamer
@@ -511,6 +512,7 @@ pub async fn receive(args: Argscustom) {
                 println!("Monitor of : {}", &handle.name().unwrap());
                 monitors.push(handle);
             });
+            println!("get width {} and height {}", width, height);
             // let window = winit::window::Window::new(&event_loop).unwrap();
             let monitorinfo = &monitors[0 as usize];
             let size1 = PhysicalSize {
@@ -523,12 +525,13 @@ pub async fn receive(args: Argscustom) {
                 height: monitorinfo.size().height,
                 width: monitorinfo.size().width,
             };
-            if downscale != 0 {
-                size2.width = ((size1.width as i32 * 100) / (100 - args.downscale)) as u32;
-                size2.height = ((size1.height as i32 * 100) / (100 - args.downscale)) as u32;
-            } else {
+            if downscale == 0 {
                 size2.width = size1.width;
                 size2.height = size1.height;
+            } else {
+                let down = 100 - downscale as u32;
+                size2.width = (size1.width * 100) / down;
+                size2.height = (size1.height * 100) / down;
             }
             let window = winit::window::WindowBuilder::new()
                 .with_inner_size(size2)
