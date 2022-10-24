@@ -272,7 +272,7 @@ pub async fn qtpsend(
     let threaded_rt_arc = Arc::new(threaded_rt);
     let threaded_rt_clone = Arc::clone(&threaded_rt_arc);
     let threaded_rt_clone2 = Arc::clone(&threaded_rt_arc);
-
+    appsink.set_async(true);
     appsink.set_callbacks(
         gstreamer_app::AppSinkCallbacks::builder()
             // Add a handler to the "new-sample" signal.
@@ -317,36 +317,30 @@ pub async fn qtpsend(
             })
             .build(),
     );
+    appsinkaudio.set_async(true);
     appsinkaudio.set_callbacks(
         gstreamer_app::AppSinkCallbacks::builder()
             // Add a handler to the "new-sample" signal.
             .new_sample(move |appsinkaudio2| {
                 match appsinkaudio2.pull_sample().map_err(|_| gst::FlowError::Eos) {
                     Ok(sample) => {
-                        // let sent_stream_input = Arc::clone(&connection2arc);
-
-                        // threaded_rt_clone2
-                        //     .spawn(async move { send_data(&sample, &sent_stream_input).await });
-                        let buffer = sample.buffer_owned().expect("cannot get buffer");
-                        let readable = buffer.map_readable().unwrap();
-
-                        // let framedata = Bytes::copy_from_slice(readable.as_byte_slice());
-                        // match screenframe_send.try_send(framedata) {
-                        //     Ok(_) => {}
-                        //     Err(_) => {}
-                        // }
-                        let bytes = &Bytes::copy_from_slice(readable.as_byte_slice());
                         let mut h1 = HazardPointer::new();
                         let my_x = currentusage_clone2.safe_load(&mut h1).expect("not null");
+                        if my_x.len() > 0 {
+                            let buffer = sample.buffer_owned().expect("cannot get buffer");
+                            let readable = buffer.map_readable().unwrap();
 
-                        for conn in my_x.clone() {
-                            let bytes1 = bytes.clone();
-                            threaded_rt_clone2.spawn(async move {
-                                match conn.send(bytes1).await {
-                                    Ok(_) => {}
-                                    Err(_) => {}
-                                }
-                            });
+                            let bytes = &Bytes::copy_from_slice(readable.as_byte_slice());
+
+                            for conn in my_x.clone() {
+                                let bytes1 = bytes.clone();
+                                threaded_rt_clone2.spawn(async move {
+                                    match conn.send(bytes1).await {
+                                        Ok(_) => {}
+                                        Err(_) => {}
+                                    }
+                                });
+                            }
                         }
                     }
                     Err(err) => println!("sample cannot be input {}", err),
@@ -370,6 +364,12 @@ pub async fn qtpsend(
     // let connection_arc2 = Arc::new(incoming_conns2);
     // let connection_arc3 = Arc::new(incoming_conns3);
     loop {
+        pipeline
+            .set_state(gst::State::Playing)
+            .expect("cannot set ready");
+        pipeline2
+            .set_state(gst::State::Playing)
+            .expect("cannot set ready");
         while let Some((connection, mut auth_messages)) = incoming_conns_auth.next().await {
             let auth = auth_messages.next().await;
             match auth {
@@ -474,12 +474,6 @@ pub async fn qtpsend(
                             });
 
                             if firsttime {
-                                pipeline
-                                    .set_state(gst::State::Playing)
-                                    .expect("cannot set ready");
-                                pipeline2
-                                    .set_state(gst::State::Playing)
-                                    .expect("cannot set ready");
                                 firsttime = false;
                             }
                         } else {

@@ -8,6 +8,7 @@ fn main() {
         wgpugst::sent(args);
     } else if args.sent_or_receive == "receive".to_string() {
         wgpugst::receive(args);
+
         // wgpugst::device()
     } else {
         println!("choose argument of (sent) or (receive)")
