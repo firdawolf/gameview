@@ -161,10 +161,10 @@ pub fn sent(bitrate: u32, shutdown_rx: Receiver<()>) {
     //     gst::ElementFactory::make("rswgpu", Some("sink")).expect("Could not create sink element");
 
     let size1 = PhysicalSize {
-        height: 756, // 864
-        width: 1344, // 1536
+        height: 864, // 864
+        width: 1536, // 1536
     };
-    let framerate: i32 = 75;
+    let framerate: i32 = 60;
     // let size2 = PhysicalSize {
     //     height: 1080,
     //     width: 1920,
@@ -259,18 +259,18 @@ pub fn sent(bitrate: u32, shutdown_rx: Receiver<()>) {
                 CapsFeatures::new(&["memory:SystemMemory"]),
             )
             .build();
-    // source.set_property("monitor-index", 0 - 1 as u8);
+    source.set_property("monitor-index", 1 as i32);
     source.set_property("show-cursor", false as bool);
-    encode.set_property("bframes", 1 as u32);
+    encode.set_property("bframes", 0 as u32);
     encode.set_property("max-bitrate", bitrate as u32);
     encode.set_property("bitrate", bitrate as u32);
-    encode.set_property("quality-vs-speed", 50 as u32);
+    encode.set_property("quality-vs-speed", 1 as u32);
     encode.set_property_from_str("rc-mode", "cbr");
     // encode.set_property("min-qp", 10 as u32);
     // encode.set_property("max-qp", 15 as u32);
     //encode.set_property("qp", 15 as u32);
 
-    encode.set_property("low-latency", false as bool);
+    encode.set_property("low-latency", true as bool);
     filter2.set_property("caps", filter_caps2);
     filter3.set_property("caps", filter_caps3);
 
@@ -355,10 +355,10 @@ pub fn receive(connect_to: SocketAddr) {
     //     gst::ElementFactory::make("rswgpu", Some("sink")).expect("Could not create sink element");
 
     let size1 = PhysicalSize {
-        height: 756, // 864
-        width: 1344, // 1536
+        height: 864, // 864
+        width: 1536, // 1536
     };
-    let framerate: i32 = 75;
+    let framerate: i32 = 60;
     let size2 = PhysicalSize {
         height: 1080,
         width: 1920,

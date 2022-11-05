@@ -176,7 +176,7 @@ impl Wgpusurface {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &self.lcas_texture_view,
+                view: &self.rcas_texture_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
@@ -305,7 +305,7 @@ impl Wgpusurface {
     pub fn yuv_compute<'a>(&'a self, size1: PhysicalSize<u32>, cpass: &mut wgpu::ComputePass<'a>) {
         cpass.set_pipeline(&self.compute_pipeline_yuv);
         cpass.set_bind_group(0, &self.compute_yuv_bind_group, &[]);
-        cpass.dispatch_workgroups(size1.width / 4, size1.height / 4, 1);
+        cpass.dispatch_workgroups(size1.width / 8, size1.height / 8, 1);
     }
     pub fn easu_draw<'a>(&'a self, rpass: &mut wgpu::RenderPass<'a>) {
         rpass.set_pipeline(&self.render_pipeline_easu);
@@ -507,10 +507,12 @@ fn build_pipeline(
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         // Most images are stored using sRGB so we need to reflect that here.
-        format: wgpu::TextureFormat::Bgra8UnormSrgb,
+        format: wgpu::TextureFormat::Rgba8Unorm,
         // TEXTURE_BINDING tells wgpu that we want to use this texture in shaders
         // COPY_DST means that we want to copy data to this texture
-        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
+        usage: wgpu::TextureUsages::COPY_SRC
+            | wgpu::TextureUsages::STORAGE_BINDING
+            | wgpu::TextureUsages::TEXTURE_BINDING,
         label: Some("easu_texture"),
     });
     let y_texture_view = y_texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -529,7 +531,7 @@ fn build_pipeline(
         address_mode_u: wgpu::AddressMode::ClampToBorder,
         address_mode_v: wgpu::AddressMode::ClampToBorder,
         address_mode_w: wgpu::AddressMode::ClampToBorder,
-        mag_filter: wgpu::FilterMode::Linear,
+        mag_filter: wgpu::FilterMode::Nearest,
         min_filter: wgpu::FilterMode::Nearest,
         mipmap_filter: wgpu::FilterMode::Nearest,
         ..Default::default()
@@ -541,9 +543,9 @@ fn build_pipeline(
         address_mode_u: wgpu::AddressMode::ClampToBorder,
         address_mode_v: wgpu::AddressMode::ClampToBorder,
         address_mode_w: wgpu::AddressMode::ClampToBorder,
-        mag_filter: wgpu::FilterMode::Linear,
-        min_filter: wgpu::FilterMode::Linear,
-        mipmap_filter: wgpu::FilterMode::Linear,
+        mag_filter: wgpu::FilterMode::Nearest,
+        min_filter: wgpu::FilterMode::Nearest,
+        mipmap_filter: wgpu::FilterMode::Nearest,
         ..Default::default()
     });
     let lcas_texture_view = lcas_texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -699,7 +701,7 @@ fn build_pipeline(
                     ty: wgpu::BindingType::Texture {
                         multisampled: false,
                         view_dimension: wgpu::TextureViewDimension::D2,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
                     },
                     count: None,
                 },
@@ -711,7 +713,7 @@ fn build_pipeline(
                         // SamplerBindingType::Filtering if the sample_type of the texture is:
                         //     TextureSampleType::Float { filterable: true }
                         // Otherwise you'll get an error.
-                        wgpu::SamplerBindingType::Filtering,
+                        wgpu::SamplerBindingType::NonFiltering,
                     ),
                     count: None,
                 },
@@ -727,7 +729,7 @@ fn build_pipeline(
                     ty: wgpu::BindingType::Texture {
                         multisampled: false,
                         view_dimension: wgpu::TextureViewDimension::D2,
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
                     },
                     count: None,
                 },
@@ -739,7 +741,7 @@ fn build_pipeline(
                         // SamplerBindingType::Filtering if the sample_type of the texture is:
                         //     TextureSampleType::Float { filterable: true }
                         // Otherwise you'll get an error.
-                        wgpu::SamplerBindingType::Filtering,
+                        wgpu::SamplerBindingType::NonFiltering,
                     ),
                     count: None,
                 },
@@ -756,6 +758,7 @@ fn build_pipeline(
             ],
             label: Some("texture_bind_group_layout"),
         });
+
     let texture_lcas_bind_group_layout =
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
@@ -1159,7 +1162,7 @@ fn build_pipeline(
             },
             wgpu::BindGroupEntry {
                 binding: 2,
-                resource: wgpu::BindingResource::TextureView(&lcas_texture_view),
+                resource: wgpu::BindingResource::TextureView(&rcas_texture_view),
             },
         ],
         label: Some("diffuse_bind_group"),

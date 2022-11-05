@@ -612,6 +612,7 @@ pub async fn qtpreceive(
                                             .await;
                                         });
                                     }
+
                                     winit::event::MouseButton::Right => {
                                         // println!("Right button press  down");
 
@@ -737,7 +738,7 @@ pub async fn qtpreceive(
                     }
                     Event::MainEventsCleared => {
                         // If there are events pending
-                        window.request_redraw();
+                        // window.request_redraw();
                         if !state.is_queue_empty() {
                             // let mut h = HazardPointer::new();
                             // let cursor_position_temp =
@@ -762,24 +763,6 @@ pub async fn qtpreceive(
                             );
 
                             // and request a redraw
-                        }
-                    }
-                    Event::RedrawRequested(_) => {
-                        if resized {
-                            let size = window.inner_size();
-
-                            surfaceclone2.configure(
-                                &device,
-                                &wgpu::SurfaceConfiguration {
-                                    format: swapchain_format,
-                                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                                    width: size.width,
-                                    height: size.height,
-                                    present_mode: wgpu::PresentMode::Immediate,
-                                },
-                            );
-
-                            resized = false;
                         }
                         match surfaceclone.get_current_texture() {
                             Ok(frame) => {
@@ -821,10 +804,10 @@ pub async fn qtpreceive(
                                 //     let mut rpass = wgpusurfaceclone2.easu_renderpass(&mut encoder);
                                 //     wgpusurfaceclone2.easu_draw(&mut rpass);
                                 // }
-                                {
-                                    let mut rpass = wgpusurfaceclone2.lcas_renderpass(&mut encoder);
-                                    wgpusurfaceclone2.lcas_draw(&mut rpass);
-                                }
+                                // {
+                                //     let mut rpass = wgpusurfaceclone2.lcas_renderpass(&mut encoder);
+                                //     wgpusurfaceclone2.lcas_draw(&mut rpass);
+                                // }
                                 {
                                     let mut rpass =
                                         wgpusurfaceclone2.rcas_renderpass(&mut encoder, &view);
@@ -867,6 +850,24 @@ pub async fn qtpreceive(
                                     //windowclone2.request_redraw();
                                 }
                             },
+                        }
+                    }
+                    Event::RedrawRequested(_) => {
+                        if resized {
+                            let size = window.inner_size();
+
+                            surfaceclone2.configure(
+                                &device,
+                                &wgpu::SurfaceConfiguration {
+                                    format: swapchain_format,
+                                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                                    width: size.width,
+                                    height: size.height,
+                                    present_mode: wgpu::PresentMode::Immediate,
+                                },
+                            );
+
+                            resized = false;
                         }
                     }
 

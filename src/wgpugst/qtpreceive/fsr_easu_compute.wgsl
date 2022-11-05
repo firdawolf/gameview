@@ -195,7 +195,7 @@ fn main(@builtin(workgroup_id) WorkGroupID : vec3<u32>,
 	//------------------------------------------------------------------------------------------------------------------------------
 	  // Get position of 'f'.
 	//var pp:vec2<f32> = (floor(vec2<f32>(vec2<f32>(baseIndex) / vec2<f32>(outputSize)) * outputSize) + 0.5) / outputSize * inputSize - 0.5;
-	var pp:vec2<f32> = (floor(vec2<f32>(vec2<f32>(baseIndex) / vec2<f32>(outputSize)) * outputSize) + 0.5) / outputSize * inputSize - 0.5;
+	var pp:vec2<f32> = (floor(vec2<f32>(vec2<f32>(baseIndex)))) / outputSize * inputSize;
 	// var conn : vec4<f32>;
 	// conn.w = inputSize.x / outputSize.x;
 	// conn.x = inputSize.y / outputSize.y;
