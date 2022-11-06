@@ -10,7 +10,5 @@ fn main() {
         wgpugst::receive(args);
 
         // wgpugst::device()
-    } else {
-        println!("choose argument of (sent) or (receive)")
     }
 }

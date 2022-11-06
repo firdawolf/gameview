@@ -81,7 +81,10 @@ pub struct Argscustom {
     /// (SENT) Encode with bframes
     #[arg(short, long, default_value_t = 0)]
     pub bframes: u32,
-    /// (SENT) Encode with bframes
+    /// (SENT) Encode with this framerate
+    #[arg(short, long, default_value_t = 60)]
+    pub framerate: u32,
+    /// (SENT) Encode with this bitrate
     #[arg(short, long, default_value_t = 5000)]
     pub bitrate: u32,
     /// (SENT) Higher number =Better quality, Lower number =Faster speed Value from : 100 - 10
@@ -172,7 +175,7 @@ pub fn sent(args: Argscustom) {
     let mut framerate: i32 = 60;
     monitorinfo.video_modes().for_each(|mode| {
         println!("Refresh rate :{}", mode.refresh_rate());
-        framerate = mode.refresh_rate() as i32
+        framerate = args.framerate as i32
     });
     let mut size1 = PhysicalSize {
         height: monitorinfo.size().height, // 864
@@ -312,7 +315,7 @@ pub fn sent(args: Argscustom) {
                 CapsFeatures::new(&["memory:SystemMemory"]),
             )
             .build();
-    // source.set_property("monitor-index", 0 - 1 as u8);
+    source.set_property("monitor-index", args.monitor as i32);
     source.set_property("show-cursor", args.show_cursor as bool);
     encode.set_property("bframes", args.bframes as u32);
     encode.set_property("max-bitrate", args.bitrate as u32);

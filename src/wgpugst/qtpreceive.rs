@@ -548,6 +548,7 @@ pub async fn qtpreceive(args: Argscustom) {
             pipeline_audio
                 .set_state(gst::State::Playing)
                 .expect("cannot set ready");
+            let mut sentmouse = true;
             event_loop.run(move |event, _, control_flow| {
                 // You should change this if you want to render continuosly
                 // let timenow = Instant::now();
@@ -568,32 +569,34 @@ pub async fn qtpreceive(args: Argscustom) {
                                 // cursor_position_clone.swap(Box::new(position));
                                 // mouse_state_clone.swap(Box::new(MOUSEEVENTF_MOVE));
                                 // send_indicator_clone2.swap(Box::new(1));
-                                if size1.height != size2.height || size1.width != size2.width {
-                                    let percnheight = size1.height as f64 / size2.height as f64;
-                                    let percnwidth = size1.width as f64 / size2.width as f64;
-                                    position.x = percnwidth * position.x;
-                                    position.y = percnheight * position.y;
-                                    cursor_position.swap(Box::new(position));
-                                    threaded_rt.spawn(async move {
-                                        send_mouse(
-                                            MOUSEEVENTF_MOVE,
-                                            &position,
-                                            &sent_stream_input_clone,
-                                            0,
-                                        )
-                                        .await;
-                                    });
-                                } else {
-                                    cursor_position.swap(Box::new(position));
-                                    threaded_rt.spawn(async move {
-                                        send_mouse(
-                                            MOUSEEVENTF_MOVE,
-                                            &position,
-                                            &sent_stream_input_clone,
-                                            0,
-                                        )
-                                        .await;
-                                    });
+                                if sentmouse {
+                                    if size1.height != size2.height || size1.width != size2.width {
+                                        let percnheight = size1.height as f64 / size2.height as f64;
+                                        let percnwidth = size1.width as f64 / size2.width as f64;
+                                        position.x = percnwidth * position.x;
+                                        position.y = percnheight * position.y;
+                                        cursor_position.swap(Box::new(position));
+                                        threaded_rt.spawn(async move {
+                                            send_mouse(
+                                                MOUSEEVENTF_MOVE,
+                                                &position,
+                                                &sent_stream_input_clone,
+                                                0,
+                                            )
+                                            .await;
+                                        });
+                                    } else {
+                                        cursor_position.swap(Box::new(position));
+                                        threaded_rt.spawn(async move {
+                                            send_mouse(
+                                                MOUSEEVENTF_MOVE,
+                                                &position,
+                                                &sent_stream_input_clone,
+                                                0,
+                                            )
+                                            .await;
+                                        });
+                                    }
                                 }
                             }
                             WindowEvent::ModifiersChanged(new_modifiers) => {
@@ -740,7 +743,13 @@ pub async fn qtpreceive(args: Argscustom) {
                                         });
                                     }
                                     winit::event::MouseButton::Other(num) => {
-                                        println!("Other button press down {}", num);
+                                        if num == 2 {
+                                            if sentmouse {
+                                                sentmouse = false;
+                                            } else {
+                                                sentmouse = true;
+                                            }
+                                        }
                                     }
                                 },
                                 winit::event::ElementState::Released => match button {

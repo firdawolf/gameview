@@ -364,12 +364,6 @@ pub async fn qtpsend(
     // let connection_arc2 = Arc::new(incoming_conns2);
     // let connection_arc3 = Arc::new(incoming_conns3);
     loop {
-        pipeline
-            .set_state(gst::State::Playing)
-            .expect("cannot set ready");
-        pipeline2
-            .set_state(gst::State::Playing)
-            .expect("cannot set ready");
         while let Some((connection, mut auth_messages)) = incoming_conns_auth.next().await {
             let auth = auth_messages.next().await;
             match auth {
@@ -474,6 +468,12 @@ pub async fn qtpsend(
                             });
 
                             if firsttime {
+                                pipeline
+                                    .set_state(gst::State::Playing)
+                                    .expect("cannot set ready");
+                                pipeline2
+                                    .set_state(gst::State::Playing)
+                                    .expect("cannot set ready");
                                 firsttime = false;
                             }
                         } else {
